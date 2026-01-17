@@ -121,6 +121,11 @@
   ]
   set par(justify: true, leading: 0.65em)
 
+  show heading.where(level: 1): it => {
+    pagebreak(weak: true)
+    it
+  }
+
   outline(indent: auto)
 
   body
