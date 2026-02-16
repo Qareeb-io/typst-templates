@@ -4,14 +4,18 @@
   contact_info: "contact@qareeb.io",
   title: "Document Title",
   doc_id: "ID-000",
-  rev: "01",
   date: datetime.today(),
   category: "Technical Reference",
   sub_category: none,
   logo: image("../assets/logo.svg"),
   status: none,
+  footer: none,
   confidentiality: "Internal Use Only",
   accent_color: rgb("2E0B5E"),
+  authors: (),
+  reviewers: (),
+  approvers: (),
+  history: (),
   body,
 ) = {
   set text(font: "Helvetica", size: 11pt)
@@ -26,7 +30,7 @@
         spacing: 4pt,
         grid(
           columns: (1fr, 1fr),
-          text(weight: "bold", doc_id), align(right, [Rev #rev]),
+          text(weight: "bold", doc_id), align(right, [Rev. #history.last().revision]),
         ),
         line(length: 100%, stroke: 0.5pt + gray),
       )
@@ -72,7 +76,7 @@
         #text(32pt, weight: "bold", fill: accent_color)[#category]
       ],
       align(right + bottom)[
-        #text(20pt, weight: "bold")[#doc_id REV.#rev] \
+        #text(20pt, weight: "bold")[#doc_id REV.#history.last().revision] \
         #text(12pt, weight: "regular")[
           #if type(date) == datetime {
             date.display("[month repr:long] [day], [year]")
@@ -92,7 +96,7 @@
 
     #v(1fr)
 
-    #status
+    #footer
 
     // Title Page Footer
     #align(bottom)[
@@ -112,6 +116,76 @@
     ]
   ]
 
+  // --- DOCUMENT CONTROL ---
+  if authors.len() > 0 or history.len() > 0 {
+    pagebreak()
+    heading(level: 1, numbering: none)[Document Control]
+    v(1em)
+
+    // 1. Document Identification Table
+    text(11pt, weight: "bold")[1. Document Identification]
+    table(
+      columns: (1fr, 1fr),
+      stroke: 0.5pt + gray,
+      fill: (col, _) => if col == 0 or col == 2 { gray.lighten(95%) },
+      [*Doc ID*], [#doc_id],
+      [*Status*], [#status],
+      [*Classification*], [#sub_category],
+      [*Revision*], [#if history.len() > 0 { history.last().revision } else { "01" }],
+    )
+    v(1.5em)
+
+    let format-row(role, person) = {
+      let date-str = if "date" in person {
+        if type(person.date) == datetime {
+          person.date.display("[month repr:long] [day], [year]")
+        } else { person.date }
+      } else { "-" }
+
+      (role, person.name, date-str, "") // The row array
+    }
+
+    // 2. Sign-off and Approval Table (Consolidated)
+    text(11pt, weight: "bold")[2. Document Approval]
+    table(
+      columns: (0.5fr, 1fr, 1fr, 1fr),
+      align: (left, left, left, center),
+      stroke: 0.5pt + gray,
+      fill: (_, row) => if row == 0 { gray.lighten(90%) },
+      table.header[*Role*][*Name*][*Date*][*Signature*],
+      ..authors.map(p => format-row("Author", p)).flatten(),
+      ..reviewers.map(p => format-row("Reviewer", p)).flatten(),
+      ..approvers.map(p => format-row("Approver", p)).flatten(),
+    )
+    v(1.5em)
+
+    // 3. Revision History
+    if history.len() > 0 {
+      text(11pt, weight: "bold")[3. Revision History]
+      table(
+        columns: (0.5fr, 1.5fr, 2.5fr, 1.8fr),
+        align: (center, center, left, left),
+        stroke: 0.5pt + gray,
+        fill: (_, row) => if row == 0 { gray.lighten(90%) },
+        table.header[*Rev.*][*Date*][*Description of Change*][*Author*],
+        ..history
+          .map(h => (
+            h.revision,
+            if type(date) == datetime {
+              date.display("[month repr:long] [day], [year]")
+            } else {
+              date
+            },
+            h.description,
+            h.author,
+          ))
+          .flatten(),
+      )
+    }
+
+    pagebreak()
+  }
+
   // --- Body Styles ---
   set heading(numbering: "1.1.1")
   show heading: it => [
@@ -122,11 +196,17 @@
   set par(justify: true, leading: 0.65em)
 
   show heading.where(level: 1): it => {
-    pagebreak(weak: true)
-    it
+    if it.has("label") and it.label == <no-break> {
+      it
+    } else {
+      pagebreak(weak: true)
+      it
+    }
   }
 
   outline(indent: auto)
+
+  pagebreak(weak: true)
 
   body
 }

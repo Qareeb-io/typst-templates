@@ -22,7 +22,7 @@ typst compile typst-templates/examples/document.typ output.pdf
 
 | Name | Description | Path |
 | --- | --- | --- |
-| **Engineering Documents** | Standard internal engineering documents. | `/templates/document.typ` |
+| **Engineering Documents** | Standard internal engineering documents. | `/template.typ` |
 
 ---
 
@@ -33,7 +33,7 @@ Each template is designed as a **function**. Instead of editing the template fil
 ### Example
 
 ```typst
-#import "@local/qareeb-templates:0.1.0": document
+#import "./template.typ": *
 
 #show: document.with(
   company_legal: "Qareeb SARL",
@@ -66,8 +66,6 @@ export TYPST_FONT_PATHS="<template dir>/assets/fonts"
 ## Repository Structure
 
 * `/assets`: Common logos, fonts, and icons.
-* `/common`: Shared Typst logic.
-* `/templates`: The actual document layouts.
 * `/examples`: Some helpful examples.
 
 ---
